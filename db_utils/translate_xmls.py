@@ -37,8 +37,8 @@ def translate_text(text, dest_lang='en'):
 def main():
 
     parser = argparse.ArgumentParser(description='Evaluate Space-aware Vision-Language Model')
-    parser.add_argument('--xml_root_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/240826', help='root dir of xml files')
-    parser.add_argument('--dest_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/240826en', help='destination root dir of xml files')
+    parser.add_argument('--xml_root_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/240829', help='root dir of xml files')
+    parser.add_argument('--dest_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/240829en', help='destination root dir of xml files')
     args = parser.parse_args()
 
     xml_list = glob.glob(f'{args.xml_root_dir}/**/*xml', recursive=True)
