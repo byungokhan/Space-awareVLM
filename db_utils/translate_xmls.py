@@ -32,18 +32,22 @@ def translate_text(text, dest_lang='en'):
                 max_tokens=100,
                 temperature=0.5))
     translated_text = response.choices[0].message.content.strip()
+    # remove ", '
+    translated_text = translated_text.replace('"', '')
+    translated_text = translated_text.replace("'", '')
+
     return translated_text
 
 def main():
 
     parser = argparse.ArgumentParser(description='Evaluate Space-aware Vision-Language Model')
-    parser.add_argument('--xml_root_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/240829', help='root dir of xml files')
-    parser.add_argument('--dest_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/240829en', help='destination root dir of xml files')
+    parser.add_argument('--xml_root_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/m240829', help='root dir of xml files')
+    parser.add_argument('--dest_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/m240829en', help='destination root dir of xml files')
     args = parser.parse_args()
 
     xml_list = glob.glob(f'{args.xml_root_dir}/**/*xml', recursive=True)
 
-    for xml_path in xml_list:
+    for idx, xml_path in enumerate(xml_list):
 
         # 사용 예시
         input_xml_file = xml_path  # 입력 XML 파일 경로
@@ -76,7 +80,7 @@ def main():
         # 번역된 XML 파일 저장
         save_xml(tree, output_xml_file)
 
-        print(f"Translated XML saved to: {output_xml_file}")
+        print(f"{idx+1}: Translated XML saved to: {output_xml_file}")
 
 if __name__ == "__main__":
     main()

@@ -20,14 +20,14 @@ import json
 import re
 import logging
 
-def init_logging(outdir):
+def init_logging(outdir, model_ckpt_name):
     # 로거 생성
     logger = logging.getLogger('evaluation_logger')
     logger.setLevel(logging.INFO)
     logger.propagate = False
 
     # 파일 핸들러 설정
-    file_handler = logging.FileHandler(outdir + '/evaluation_log.txt')
+    file_handler = logging.FileHandler(f'{outdir}/evaluation_log_{model_ckpt_name}.txt')
     file_handler.setLevel(logging.INFO)
 
     # 콘솔 핸들러 설정
@@ -101,11 +101,13 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
         gp_y = gt_root.find("goal_position/y").text.strip()
         gp_xy = f"({float(gp_x):.3f}, {float(gp_y):.3f})"
 
-        img_path = xml_path.replace('xml', 'JPG')
+        img_path = xml_path.replace('.xml', '.JPG')
         if not os.path.exists(img_path):
-            img_path = xml_path.replace('xml', 'jpeg')
+            img_path = xml_path.replace('.xml', '.jpeg')
         if not os.path.exists(img_path):
-            img_path = xml_path.replace('xml', 'jpg')
+            img_path = xml_path.replace('.xml', '.jpg')
+        if not os.path.exists(img_path):
+            img_path = xml_path.replace('.xml', '.png')
 
         image = Image.open(img_path)
         image_tensor = process_images([image], image_processor, model.config)
@@ -156,7 +158,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             logger.info(f"   [answer]: {output_desc}")
 
             gt_dest_desc = gt_root.find(gt_tag)
-            if gt_dest_desc == None or gt_dest_desc.text:
+            if gt_dest_desc == None or gt_dest_desc.text == None:
                 continue
             else:
                 gt_dest_desc = gt_dest_desc.text.strip()
@@ -219,7 +221,10 @@ def main():
         os.makedirs(output_dir)
 
     # init logger
-    logger = init_logging(output_dir)
+    logger = init_logging(output_dir, model_ckpt_name)
+    # logging parameters
+    for arg, value in vars(args).items():
+        logger.info(f"{arg}: {value}")
 
     # model setting
     model_name = get_model_name_from_path(args.model_ckpt_path)
