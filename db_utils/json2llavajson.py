@@ -8,7 +8,7 @@ def parse_args():
         description='Generate json file for the llava training framework')
 
     parser.add_argument(
-        '--gt_dir', default='/mnt/data_disk/dbs/gd_space_aware/auto_gen/2024.08.05_06_all/',
+        '--gt_dir', default='/mnt/data_disk/dbs/gd_space_aware/auto_gen/2024.08.30_20k/',
         metavar='DIRECTORY for ground truth',
         help='directory which contains images and object properties')
 

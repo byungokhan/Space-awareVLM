@@ -23,18 +23,22 @@ def translate_xml_elements(root, tags_to_translate):
 def translate_text(text, dest_lang='en'):
     if not text:
         return text
+
+    print("orgin: ", text)
+
     response = (client.chat.completions.create
-                (model="gpt-4o-mini-2024-07-18",  # 최신 모델 이름 사용
+                (model="gpt-4o",
                 messages=[
                         {"role": "system", "content": "You are a helpful assistant that translates text to English."},
-                        {"role": "user", "content": f"Translate the following text to English: '{text}'. Only answer please."}
+                        {"role": "user", "content": f"Translate the following text to an English sentence considering walking guide context.: '{text}'. Only answer please."}
                          ],
-                max_tokens=100,
-                temperature=0.5))
+                max_tokens=1024,
+                temperature=0.0))
     translated_text = response.choices[0].message.content.strip()
     # remove ", '
     translated_text = translated_text.replace('"', '')
     translated_text = translated_text.replace("'", '')
+    print("translated: ", translated_text)
 
     return translated_text
 
