@@ -19,6 +19,7 @@ from datetime import datetime
 import json
 import re
 import logging
+from eval_xmls_llm2 import eval_text_llm_judge
 
 def init_logging(outdir, model_ckpt_name):
     # 로거 생성
@@ -63,7 +64,9 @@ def eval_text(gt_text, infer_text):
     r_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
     r_scores = r_scorer.score(gt_text, infer_text)
 
-    return m_score, b_scores, r_scores
+    llm_reason_score, llm_score = eval_text_llm_judge(gt_text, infer_text)
+
+    return m_score, b_scores, r_scores, llm_score
 
 
 def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
@@ -80,6 +83,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
         'm_scores': {tag: 0.0 for tag in eval_gt_tags},
         'b_scores': {tag: {'precision': 0.0, 'recall': 0.0, 'f1': 0.0} for tag in eval_gt_tags},
         'r_scores': {tag: {'rouge1': 0.0, 'rouge2': 0.0, 'rougeL': 0.0} for tag in eval_gt_tags},
+        'llm_scores': {tag: 0.0 for tag in eval_gt_tags},
     }
 
     file_count = 1
@@ -93,6 +97,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             'm_scores': {tag: [] for tag in eval_gt_tags},
             'b_scores': {tag: {'precision': [], 'recall': [], 'f1': []} for tag in eval_gt_tags},
             'r_scores': {tag: {'rouge1': [], 'rouge2': [], 'rougeL': []} for tag in eval_gt_tags},
+            'llm_scores': {tag: [] for tag in eval_gt_tags},
         }
 
         gt_tree = ET.parse(xml_path)
@@ -165,7 +170,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             gt_dest_desc = gt_dest_desc.replace("India", "sidewalk")
             logger.info(f"   [gt]: {gt_dest_desc}")
 
-            m_score, b_scores, r_scores = eval_text(gt_dest_desc, output_desc)
+            m_score, b_scores, r_scores, llm_score = eval_text(gt_dest_desc, output_desc)
 
             tag_scores[xml_filename]['m_scores'][gt_tag].append(m_score)
             tag_scores[xml_filename]['b_scores'][gt_tag]['precision'].append(b_scores['precision'])
@@ -174,6 +179,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             tag_scores[xml_filename]['r_scores'][gt_tag]['rouge1'].append(r_scores['rouge1'].fmeasure)
             tag_scores[xml_filename]['r_scores'][gt_tag]['rouge2'].append(r_scores['rouge2'].fmeasure)
             tag_scores[xml_filename]['r_scores'][gt_tag]['rougeL'].append(r_scores['rougeL'].fmeasure)
+            tag_scores[xml_filename]['llm_scores'][gt_tag].append(llm_score)
 
             avg_scores['m_scores'][gt_tag] += (m_score - avg_scores['m_scores'][gt_tag]) / file_count
             avg_scores['b_scores'][gt_tag]['precision'] += (b_scores['precision'] - avg_scores['b_scores'][gt_tag]['precision']) / file_count
@@ -182,6 +188,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             avg_scores['r_scores'][gt_tag]['rouge1'] += (r_scores['rouge1'].fmeasure - avg_scores['r_scores'][gt_tag]['rouge1']) / file_count
             avg_scores['r_scores'][gt_tag]['rouge2'] += (r_scores['rouge2'].fmeasure - avg_scores['r_scores'][gt_tag]['rouge2']) / file_count
             avg_scores['r_scores'][gt_tag]['rougeL'] += (r_scores['rougeL'].fmeasure - avg_scores['r_scores'][gt_tag]['rougeL']) / file_count
+            avg_scores['llm_scores'][gt_tag] += (llm_score - avg_scores['llm_scores'][gt_tag]) / file_count
 
             logger.info(f"  METEOR Score: {m_score}")
             logger.info(f"  BERTScore Precision: {b_scores['precision']}")
@@ -190,6 +197,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             logger.info(f"  ROUGE-1: {r_scores['rouge1'].fmeasure}")
             logger.info(f"  ROUGE-2: {r_scores['rouge2'].fmeasure}")
             logger.info(f"  ROUGE-L: {r_scores['rougeL'].fmeasure}")
+            logger.info(f"  LLM Score: {llm_score}")
 
             logger.info(f"  [Avg] METEOR Score: {avg_scores['m_scores'][gt_tag]}")
             logger.info(f"  [Avg] BERTScore Precision: {avg_scores['b_scores'][gt_tag]['precision']}")
@@ -198,6 +206,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             logger.info(f"  [Avg] ROUGE-1: {avg_scores['r_scores'][gt_tag]['rouge1']}")
             logger.info(f"  [Avg] ROUGE-2: {avg_scores['r_scores'][gt_tag]['rouge2']}")
             logger.info(f"  [Avg] ROUGE-L: {avg_scores['r_scores'][gt_tag]['rougeL']}")
+            logger.info(f"  [Avg] LLM Score: {avg_scores['llm_scores'][gt_tag]}")
 
         # Update running averages
         file_count += 1

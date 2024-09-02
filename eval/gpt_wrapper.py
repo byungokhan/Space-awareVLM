@@ -23,7 +23,7 @@ class gpt_wrapper():
             encoded_image = encode_image_to_base64(image_path)
         else:
             encoded_image = None
-        
+
         if len(sys_prompt) == 0:
             messages = []
         else:
@@ -31,11 +31,11 @@ class gpt_wrapper():
                 {"role": "system", "content": sys_prompt}
             ]
 
-        print(f'@gpt - automatic user input: {user_prompt}')
+        #print(f'@gpt - automatic user input: {user_prompt}')
 
         user_content = [
             {
-                "type": "text", 
+                "type": "text",
                 "text": user_prompt
             }
         ]
@@ -85,12 +85,12 @@ class gpt_wrapper():
                     print(f"OpenAI API call all failed, skip this request.")
 
                     return None
-                
+
 
 if __name__ == '__main__':
     llm_model_name = "gpt-4o-mini-2024-07-18"
     llm_model = gpt_wrapper(llm_model_name)
-    
+
     llm_system = 'A chat between a human and an AI that understands visuals in English. '
     llm_prompt = \
     'Based on the description, select the most appropriate action: \'Follow the path\' or \'Stop and wait\'. Then, explain in one sentence whether walking to the destination is possible and the reason. \n'\
