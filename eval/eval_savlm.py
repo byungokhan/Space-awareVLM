@@ -28,7 +28,8 @@ def init_logging(outdir, model_ckpt_name):
     logger.propagate = False
 
     # 파일 핸들러 설정
-    file_handler = logging.FileHandler(f'{outdir}/evaluation_log_{model_ckpt_name}.txt')
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_handler = logging.FileHandler(f'{outdir}/{current_time}_evaluation_log_{model_ckpt_name}_.txt')
     file_handler.setLevel(logging.INFO)
 
     # 콘솔 핸들러 설정

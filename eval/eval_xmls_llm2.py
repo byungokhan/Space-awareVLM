@@ -59,8 +59,8 @@ def eval_text_llm_judge(gt_text, infer_text):
                  '<|The End of Assistant A\'s Description|>\n' \
 
     llm_reason_score = gpt_model.generate_llm_response(llm_system, llm_prompt, seed=17, temperature=0.0)
-    print(type(llm_reason_score))
-    print(llm_reason_score)
+    # print(type(llm_reason_score))
+    # print(llm_reason_score)
     ratings = re.findall(r'Rating: \[\[(\d+\.?\d*)\]\]', llm_reason_score)
     score = float(ratings[0])
 

@@ -16,76 +16,59 @@ from gpt_wrapper import gpt_wrapper
 from llava.mm_utils import get_model_name_from_path, process_images, tokenizer_image_token
 from llava.model.builder import load_pretrained_model
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
+from llava.conversation import conv_templates
 
 # llava-next model names
 # llava-hf/llava-v1.6-mistral-7b-hf
 # llava-hf/llava-v1.6-vicuna-7b-hf
 # llava-hf/llava-v1.6-vicuna-13b-hf
 # llava-hf/llava-v1.6-34b-hf
-# llava-hf/llama3-llava-next-8b-hf
+# llava-hf/llama3-llava-next-8b-hf --> empty result
 # llava-hf/llava-next-72b-hf
 # llava-hf/llava-next-110b-hf
 # gpt-4o-2024-08-06
 # gpt-4o-mini-2024-07-18
 
-def llava_next_inference_latest(image, sys_prompt, user_prompt, model, processor, device):
+def llava_next_inference_latest(image, sys_prompt, user_prompt, model, model_name, processor, device):
 
-    #########
-    conversation = [
-        # {
-        #     "role": "system",
-        #     "content": [
-        #         {"type": "text", "text": sys_prompt},
-        #     ],
-        # },
-        {
-            "role": "user",
-            "content": [
-                {"type": "image"},
-                {"type": "text", "text": sys_prompt + ' ' + user_prompt},
-            ],
-        },
-    ]
-    prompt = processor.apply_chat_template(conversation, add_generation_prompt=True)
-    print(prompt)
-    inputs = processor(prompt, image, return_tensors="pt").to(device)
-    # autoregressively complete prompt
-    output = model.generate(**inputs, max_new_tokens=2048)
+    if 'llama3' in model_name:
+        custom_prompt = (
+            f"<|start_header_id|>System:<|end_header_id|>\n\n"
+            f"{sys_prompt}<|eot_id|>"
+            f"<|start_header_id|>User:<|end_header_id|>\n\n"
+            f"<image>\n{user_prompt}<|eot_id|>"
+            f"<|start_header_id|>Assistant:<|end_header_id|>\n\n"
+        )
+    elif '34b' in model_name:
+        custom_prompt = (f"<|im_start|>System:\n{sys_prompt}<|im_end|>"
+                         f"<|im_start|>User:\n<image>\n{user_prompt}<|im_end|>"
+                         f"<|im_start|>Assistant:\n")
+    else:
+        custom_prompt = f"<image>\nSystem: {sys_prompt}\nUser: {user_prompt}\nAssistant:"
+
+    inputs = processor(custom_prompt, image, return_tensors="pt").to(device)
+    output = model.generate(**inputs,
+                            temperature=0.0,
+                            max_new_tokens=4096)
     text_output = processor.decode(output[0], skip_special_tokens=True)
+    response_start = text_output.find("Assistant:") + len("Assistant:")
+    response = text_output[response_start:].strip()
 
-    return text_output
+    return response
 
-def llava_next_inference(image, sys_prompt, user_prompt, model, tokenizer, image_processor, device):
+def llava_ov_inference(image, sys_prompt, user_prompt, model, tokenizer, image_processor, device):
 
     image_tensor = process_images([image], image_processor, model.config)
     image_tensor = [_image.to(dtype=torch.float16, device=device) for _image in image_tensor]
 
-    #conv_template = "qwen_1_5"  # Make sure you use correct chat template for different models
-    # question = DEFAULT_IMAGE_TOKEN + "\nWhat is shown in this image?"
-    # question = DEFAULT_IMAGE_TOKEN + "\nPlease provide a brief walking guide for a visually impaired person by analyzing the image based on the goal position (0.600, 0.750)."
-    # conv = copy.deepcopy(conv_templates[conv_template])
-    # conv.append_message(conv.roles[0], question)
-    # conv.append_message(conv.roles[1], None)
-    # prompt_question = conv.get_prompt()
+    conv_template = "qwen_1_5"  # Make sure you use correct chat template for different models
+    question = DEFAULT_IMAGE_TOKEN + f"\nSystem: {sys_prompt}\nUser: {user_prompt}\nAssistant:"
+    conv = copy.deepcopy(conv_templates[conv_template])
+    conv.append_message(conv.roles[0], question)
+    conv.append_message(conv.roles[1], None)
+    prompt_question = conv.get_prompt()
 
-    conversation = [
-        {
-            "role": "system",
-            "content": [
-                {"type": "text", "text": sys_prompt},
-            ],
-        },
-        {
-            "role": "user",
-            "content": [
-                {"type": "image"},
-                {"type": "text", "text": user_prompt},
-            ],
-        },
-    ]
-
-    input_ids = tokenizer_image_token(conversation, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(
-        0).to(device)
+    input_ids = tokenizer_image_token(prompt_question, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).to(device)
     image_sizes = [image.size]
 
     cont = model.generate(
@@ -97,10 +80,12 @@ def llava_next_inference(image, sys_prompt, user_prompt, model, tokenizer, image
         max_new_tokens=4096,
     )
     text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)
+    response_start = text_outputs[0].find("Assistant:") + len("Assistant:")
+    response = text_outputs[0][response_start:].strip()
 
-    return text_outputs[0]
+    return response
 
-def evaluate_zero_shot_vlm(anno_list, model, tokenizer, processor, device, logger):
+def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, device, logger):
 
     eval_gt_degree = 'simple'  # or 'complex'
     eval_gt_tags = ['dest', 'left', 'right', 'path']
@@ -162,15 +147,17 @@ def evaluate_zero_shot_vlm(anno_list, model, tokenizer, processor, device, logge
             elif i==5: # Decs
                 gt_tag = eval_gt_tags[4]
                 all_responses = ' '.join(responses)
-                user_prompt = all_responses + ' ' + user_prompt[0]
+                user_prompt = all_responses + ' ' + user_prompt
             else:
                 gt_tag = None
 
-            if isinstance(model, gpt_wrapper):
+            if 'gpt' in model_name:
                 text_output = model.generate_llm_response(sys_prompt, user_prompt, img_path)
             else:
-                #text_output = llava_next_inference(image, sys_prompt, user_prompt, model, tokenizer, image_processor, device)
-                text_output = llava_next_inference_latest(image, sys_prompt, user_prompt, model, processor, device)
+                if 'onevision' in model_name:
+                    text_output = llava_ov_inference(image, sys_prompt, user_prompt, model, tokenizer, processor, device)
+                else:
+                    text_output = llava_next_inference_latest(image, sys_prompt, user_prompt, model, model_name, processor, device)
 
             responses.append(text_output)
 
@@ -251,25 +238,28 @@ def main():
         os.makedirs(output_dir)
 
     if 'llava' in args.model_ckpt_path:
-        processor = LlavaNextProcessor.from_pretrained(args.model_ckpt_path)
-        model = LlavaNextForConditionalGeneration.from_pretrained(args.model_ckpt_path, torch_dtype=torch.float16, low_cpu_mem_usage=True)
-        # tokenizer = AutoTokenizer.from_pretrained(args.model_ckpt_path)
-        # model = AutoModelForCausalLM.from_pretrained(args.model_ckpt_path)
-        device = "cuda"
-        tokenizer = None
-        model.to(device)
+        model_name = get_model_name_from_path(args.model_ckpt_path)
+        if 'onevision' in args.model_ckpt_path:
+            device = "cuda"
+            device_map = "auto"
+            tokenizer, model, processor, max_length = load_pretrained_model(args.model_ckpt_path, None, model_name, device_map=device_map)
+            model.eval()
 
-        # model_name = get_model_name_from_path(args.model_ckpt_path)
-        # device = "cuda"
-        # device_map = "auto"
-        # tokenizer, model, image_processor, max_length = (
-        #     load_pretrained_model(args.model_ckpt_path, None, model_name, device_map=device_map))  # Add any other thing you want to pass in llava_model_args
-        # model.eval()
-
+        else:
+            processor = LlavaNextProcessor.from_pretrained(args.model_ckpt_path)
+            model = LlavaNextForConditionalGeneration.from_pretrained(args.model_ckpt_path,
+                                                                      torch_dtype=torch.float16,
+                                                                      # low_cpu_mem_usage=True,
+                                                                      device_map="auto")
+            device = "cuda"
+            tokenizer = None
+            model.eval()
+            #model.to(device)
     elif 'gpt' in args.model_ckpt_path:
+        model_name = 'gpt'
         model = gpt_wrapper('gpt-4o-2024-08-06', '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')
         tokenizer = None
-        image_processor = None
+        processor = None
         device = None
 
     # init logger
@@ -287,7 +277,7 @@ def main():
         if any(folder in xml_file for folder in target_folders)
     ]
 
-    tag_scores, avg_scores = evaluate_zero_shot_vlm(filtered_anno_list, model, tokenizer, processor, device, logger)
+    tag_scores, avg_scores = evaluate_zero_shot_vlm(filtered_anno_list, model, model_name, tokenizer, processor, device, logger)
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file_name = f"{model_ckpt_name}_{current_time}.txt"
