@@ -90,8 +90,11 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
 
     for xml_idx, xml_path in enumerate(anno_list):
 
+        # if xml_idx <= 550:
+        #     continue
+
         xml_filename = os.path.basename(xml_path)
-        logger.info(f"[{file_count}] ********** [GT FILENAME]: {xml_path}")
+        logger.info(f"[{xml_idx+1}] ********** [GT FILENAME]: {xml_path}")
         print(file_count, " : ", xml_path)
         tag_scores[xml_filename] = {
             'm_scores': {tag: [] for tag in eval_gt_tags},
@@ -149,7 +152,8 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
 
         # 파싱 가능한 XML로 변경된 내용을 출력
         logger.info(f"[ANSWER]: {text_outputs[0]}" )
-        output_root = ET.fromstring('<root>' + text_outputs[0] + '</root>')
+        fixed_output = text_outputs[0].replace('&', '&amp;')
+        output_root = ET.fromstring('<root>' + fixed_output + '</root>')
         #print(ET.tostring(output_root, encoding='unicode'))
 
         for i, gt_tag in enumerate(eval_gt_tags):
