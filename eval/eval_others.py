@@ -98,6 +98,7 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
         'b_scores': {tag: {'precision': 0.0, 'recall': 0.0, 'f1': 0.0} for tag in eval_gt_tags},
         'r_scores': {tag: {'rouge1': 0.0, 'rouge2': 0.0, 'rougeL': 0.0} for tag in eval_gt_tags},
         'llm_scores': {tag: 0.0 for tag in eval_gt_tags},
+        'llm_scores_c': {tag: 0.0 for tag in eval_gt_tags},
         'num_words': {tag: 0.0 for tag in eval_gt_tags},
     }
 
@@ -113,6 +114,7 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
             'b_scores': {tag: {'precision': [], 'recall': [], 'f1': []} for tag in eval_gt_tags},
             'r_scores': {tag: {'rouge1': [], 'rouge2': [], 'rougeL': []} for tag in eval_gt_tags},
             'llm_scores': {tag: [] for tag in eval_gt_tags},
+            'llm_scores_c': {tag: [] for tag in eval_gt_tags},
             'num_words': {tag: [] for tag in eval_gt_tags},
         }
 
