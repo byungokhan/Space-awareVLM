@@ -3,6 +3,14 @@ import os
 import pandas as pd
 from datetime import datetime
 
+
+# Helper function to convert column names
+def convert_column_name(col_name):
+    if col_name.endswith('recommend'):
+        return 'RECOMMEND'
+    else:
+        return col_name.split('/')[-2].upper()
+
 def process_json_files(root_dir, file_paths, output_path):
     # 빈 데이터프레임 딕셔너리 초기화
     data_frames = {
@@ -24,27 +32,27 @@ def process_json_files(root_dir, file_paths, output_path):
         # m_scores -> METEOR score
         m_scores = data['avg_scores']['m_scores']
         m_df = pd.DataFrame(m_scores, index=[algorithm_name])
-        m_df.columns = [col.split('/')[-2].upper() for col in m_df.columns]
+        m_df.columns = [convert_column_name(col) for col in m_df.columns]
         data_frames["METEOR score"] = pd.concat([data_frames["METEOR score"], m_df])
 
         # b_scores -> BertScore (f1 값만 사용)
         b_scores = {k: v['f1'] for k, v in data['avg_scores']['b_scores'].items()}
         b_df = pd.DataFrame(b_scores, index=[algorithm_name])
-        b_df.columns = [col.split('/')[-2].upper() for col in b_df.columns]
+        b_df.columns = [convert_column_name(col) for col in b_df.columns]
         data_frames["BertScore"] = pd.concat([data_frames["BertScore"], b_df])
 
         # r_scores -> ROUGE-1, ROUGE-2, ROUGE-L
         r_scores = data['avg_scores']['r_scores']
         for rouge_type in ["rouge1", "rouge2", "rougeL"]:
             r_df = pd.DataFrame({k: v[rouge_type] for k, v in r_scores.items()}, index=[algorithm_name])
-            r_df.columns = [col.split('/')[-2].upper() for col in r_df.columns]
+            r_df.columns = [convert_column_name(col) for col in r_df.columns]
             score_type = rouge_type.upper().replace("ROUGE", "ROUGE-")
             data_frames[score_type] = pd.concat([data_frames[score_type], r_df])
 
         # llm_scores -> LLM_Judge Score
         llm_scores = data['avg_scores']['llm_scores']
         llm_df = pd.DataFrame(llm_scores, index=[algorithm_name])
-        llm_df.columns = [col.split('/')[-2].upper() for col in llm_df.columns]
+        llm_df.columns = [convert_column_name(col) for col in llm_df.columns]
         data_frames["LLM_Judge Score"] = pd.concat([data_frames["LLM_Judge Score"], llm_df])
 
     # 엑셀 파일로 저장
