@@ -229,6 +229,7 @@ def main():
             tokenizer = None
             model.eval()
             #model.to(device)
+
     elif 'gpt' in args.model_ckpt_path:
         model_name = 'gpt'
         model = gpt_wrapper('gpt-4o-2024-08-06', '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')

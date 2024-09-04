@@ -66,8 +66,11 @@ def eval_text(gt_text, infer_text):
     r_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
     r_scores = r_scorer.score(gt_text, infer_text)
 
-    _, llm_score = eval_text_llm_judge(gt_text, infer_text)
-    _, llm_score_c = eval_text_llm_judge_w_conciseness(gt_text, infer_text)
+    llm_score, llm_score_c = None, None
+    while llm_score is None:
+        _, llm_score = eval_text_llm_judge(gt_text, infer_text)
+    while llm_score_c is None:
+        _, llm_score_c = eval_text_llm_judge_w_conciseness(gt_text, infer_text)
 
     return m_score, b_scores, r_scores, llm_score, llm_score_c, num_tokens
 
