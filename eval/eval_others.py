@@ -39,7 +39,7 @@ def llava_next_inference_latest(image, sys_prompt, user_prompt, model, model_nam
             f"<image>\n{user_prompt}<|eot_id|>"
             f"<|start_header_id|>Assistant:<|end_header_id|>\n\n"
         )
-    elif '34b' in model_name:
+    elif any(x in model_name for x in ['34b', '72b', '110b']):
         custom_prompt = (f"<|im_start|>System:\n{sys_prompt}<|im_end|>"
                          f"<|im_start|>User:\n<image>\n{user_prompt}<|im_end|>"
                          f"<|im_start|>Assistant:\n")
@@ -80,10 +80,8 @@ def llava_ov_inference(image, sys_prompt, user_prompt, model, tokenizer, image_p
         max_new_tokens=4096,
     )
     text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)
-    response_start = text_outputs[0].find("Assistant:") + len("Assistant:")
-    response = text_outputs[0][response_start:].strip()
 
-    return response
+    return text_outputs[0]
 
 def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, device, logger):
 
