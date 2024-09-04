@@ -16,7 +16,6 @@ import re
 import pdb
 import argparse
 import yaml
-#import spacy
 from itertools import product
 import re
 
@@ -26,14 +25,12 @@ from gpt_wrapper import gpt_wrapper
 from llm_wrapper import llm_wrapper
 
 
-# spaCy의 중형 영어 모델 로드
-#nlp = spacy.load('en_core_web_md')
 # gpt_model = gpt_wrapper('gpt-4o-mini-2024-07-18', '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')
 gpt_model = gpt_wrapper('gpt-4o-2024-08-06', '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')
 # gpt_model = llm_wrapper('meta-llama/Meta-Llama-3.1-8B-Instruct')
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Copy image files')
+    parser = argparse.ArgumentParser(description='Copy image files')   
 
     parser.add_argument('--config', type=str, required=True)
 
@@ -50,7 +47,7 @@ def eval_text_llm_judge(gt_text, infer_text):
                  'correct any mistakes. Be as objective as possible. After providing your explanation, you ' \
                  'must rate the response on a scale of 1 to 10 by strictly following this format: ' \
                  '"[[rating]]", for example: "Rating: [[5]]". \n'
-
+    
     llm_prompt = '<|The Start of Reference Description|>\n' \
                  f'{gt_text}\n' \
                  '<|The End of Reference Description|>\n\n' \
@@ -59,13 +56,37 @@ def eval_text_llm_judge(gt_text, infer_text):
                  '<|The End of Assistant A\'s Description|>\n' \
 
     llm_reason_score = gpt_model.generate_llm_response(llm_system, llm_prompt, seed=17, temperature=0.0)
-    # print(type(llm_reason_score))
-    # print(llm_reason_score)
     ratings = re.findall(r'Rating: \[\[(\d+\.?\d*)\]\]', llm_reason_score)
     score = float(ratings[0])
 
     return llm_reason_score, score
 
+
+def eval_text_llm_judge_w_conciseness(gt_text, infer_text):
+    llm_system = 'Please act as an impartial judge and evaluate the quality of the description provided by an ' \
+                 'AI assistant to the user. Your evaluation should consider correctness, ' \
+                 'helpfulness, and conciseness. You will be given a reference description and the assistant\'s description. You ' \
+                 'evaluation should focus on the assistant\'s description. Begin your ' \
+                 'evaluation by comparing the assistant\'s description with the reference description. Identify and ' \
+                 'correct any mistakes. Evaluate the conciseness of the assistant\'s description. Be as objective as possible. ' \
+                 'After providing your explanation, you ' \
+                 'must rate the response on a scale of 1 to 10 by strictly following this format: ' \
+                 '"[[rating]]", for example: "Rating: [[5]]". \n'
+    
+    llm_prompt = '<|The Start of Reference Description|>\n' \
+                 f'{gt_text}\n' \
+                 '<|The End of Reference Description|>\n\n' \
+                 '<|The Start of Assistant A\'s Description|>\n' \
+                 f'{infer_text}\n' \
+                 '<|The End of Assistant A\'s Description|>\n' \
+
+    llm_reason_score = gpt_model.generate_llm_response(llm_system, llm_prompt, seed=17, temperature=0.0)
+    ratings = re.findall(r'Rating: \[\[(\d+\.?\d*)\]\]', llm_reason_score)
+    score = float(ratings[0])
+
+    return llm_reason_score, score
+
+    
 
 def eval_text(gt_text, infer_text):
 
@@ -111,17 +132,22 @@ def calculate_max_similarity(nouns1, nouns2):
     두 문장에서 추출한 명사 쌍들 사이의 최대 유사도를 계산하는 함수
     """
     max_similarity = 0.0
-
+    
     # 가능한 모든 명사 쌍을 비교
     for noun1, noun2 in product(nouns1, nouns2):
         similarity = noun1.similarity(noun2)
         if similarity > max_similarity:
             max_similarity = similarity
-
+    
     return max_similarity
 
-def evaluate_xmls(pred_xml_list, gt_dir):
+def count_words(sentence):
+    words = sentence.split()    # space
+    
+    return len(words)
 
+def evaluate_xmls(pred_xml_list, gt_dir, with_length=False):
+    
 
     error_file_list = []    # error_file_list
 
@@ -183,7 +209,10 @@ def evaluate_xmls(pred_xml_list, gt_dir):
             print(f"gt_dest_desc 1: {gt_dest_desc}")
             print(f"output_desc 2: {output_desc}")
 
-            llm_reason_score, llm_score = eval_text_llm_judge(gt_dest_desc, output_desc)
+            if with_length:
+                llm_reason_score, llm_score = eval_text_llm_judge_w_conciseness(gt_dest_desc, output_desc)
+            else:
+                llm_reason_score, llm_score = eval_text_llm_judge(gt_dest_desc, output_desc)
 
             eval_counts[gt_tag] += 1
 
@@ -192,15 +221,14 @@ def evaluate_xmls(pred_xml_list, gt_dir):
             tag_scores[xml_filename]['llm_reason'][gt_tag].append(llm_reason_score)
             tag_scores[xml_filename]['llm_scores'][gt_tag].append(llm_score)
 
-            # Update running averages
+            # Update running averages            
             avg_scores['llm_scores'][gt_tag] += (llm_score - avg_scores['llm_scores'][gt_tag]) / eval_counts[gt_tag]
-
+            
 
             print(f"  GT  : {gt_dest_desc}")
             print(f"  Pred: {output_desc}")
             print(f"  LLM Score: {llm_score} (Avg: {avg_scores['llm_scores'][gt_tag]})")
-
-
+            
         print("\n")
 
     return tag_scores, avg_scores, error_file_list, eval_counts
@@ -211,7 +239,7 @@ def evaluate_folders(pred_db_dir, gt_db_dir, output_dir):
     pred_xml_list = glob.glob(f'{pred_db_dir}/**/*xml', recursive=True)
     pred_xml_list = sorted(pred_xml_list)
 
-    tag_scores, avg_scores, error_file_list, eval_counts = evaluate_xmls(pred_xml_list, gt_db_dir)
+    tag_scores, avg_scores, error_file_list, eval_counts = evaluate_xmls(pred_xml_list, gt_db_dir, with_length=True)
 
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
@@ -220,7 +248,7 @@ def evaluate_folders(pred_db_dir, gt_db_dir, output_dir):
     # Create the output file name
     # model_ckpt_name = os.path.basename(args.model_ckpt_path)
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-
+    
     # Write the result to the text file
     output_file_name = f"avg_scores_{current_time}.txt"
     output_file_path = os.path.join(output_dir, output_file_name)
@@ -238,7 +266,7 @@ def evaluate_folders(pred_db_dir, gt_db_dir, output_dir):
     with open(error_file_path, 'w') as fid:
         for item in error_file_list:
             fid.write(item + '\n')
-
+    
 
     print(f"Average scores and tag scores saved to {output_file_path}")
 
@@ -250,7 +278,7 @@ def main():
 
     pred_db_dir = os.path.join(conf['output_dir'], conf['task_name'], 'qa')
     eval_db_dir = os.path.join(conf['db']['base_dir'], conf['db']['gt'])
-    output_dir = os.path.join(conf['output_dir'], conf['task_name'], 'eval_llm_judge')
+    output_dir = os.path.join(conf['output_dir'], conf['task_name'], 'eval_llm_judge_conciseness')
 
     evaluate_folders(pred_db_dir, eval_db_dir, output_dir)
 

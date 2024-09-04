@@ -9,7 +9,7 @@ import copy
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
-from eval_savlm import init_logging, eval_text
+from eval_savlm import init_logging, eval_text, update_and_logging_results
 from eval_prompt import get_prompt
 from gpt_wrapper import gpt_wrapper
 
@@ -178,47 +178,15 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
                 gt_dest_desc = gt_dest_desc.replace("India", "sidewalk")
                 logger.info(f"   [gt]: {gt_dest_desc}")
 
-                m_score, b_scores, r_scores, llm_score, num_words = eval_text(gt_dest_desc, text_output)
+                results = eval_text(gt_dest_desc, text_output)
+                tag_scores, avg_scores = update_and_logging_results(tag_scores,
+                                                                    avg_scores,
+                                                                    xml_filename,
+                                                                    gt_tag,
+                                                                    file_count,
+                                                                    results,
+                                                                    logger)
 
-                tag_scores[xml_filename]['m_scores'][gt_tag].append(m_score)
-                tag_scores[xml_filename]['b_scores'][gt_tag]['precision'].append(b_scores['precision'])
-                tag_scores[xml_filename]['b_scores'][gt_tag]['recall'].append(b_scores['recall'])
-                tag_scores[xml_filename]['b_scores'][gt_tag]['f1'].append(b_scores['f1'])
-                tag_scores[xml_filename]['r_scores'][gt_tag]['rouge1'].append(r_scores['rouge1'].fmeasure)
-                tag_scores[xml_filename]['r_scores'][gt_tag]['rouge2'].append(r_scores['rouge2'].fmeasure)
-                tag_scores[xml_filename]['r_scores'][gt_tag]['rougeL'].append(r_scores['rougeL'].fmeasure)
-                tag_scores[xml_filename]['llm_scores'][gt_tag].append(llm_score)
-                tag_scores[xml_filename]['num_words'][gt_tag].append(num_words)
-
-                avg_scores['m_scores'][gt_tag] += (m_score - avg_scores['m_scores'][gt_tag]) / file_count
-                avg_scores['b_scores'][gt_tag]['precision'] += (b_scores['precision'] - avg_scores['b_scores'][gt_tag]['precision']) / file_count
-                avg_scores['b_scores'][gt_tag]['recall'] += (b_scores['recall'] - avg_scores['b_scores'][gt_tag]['recall']) / file_count
-                avg_scores['b_scores'][gt_tag]['f1'] += (b_scores['f1'] - avg_scores['b_scores'][gt_tag]['f1']) / file_count
-                avg_scores['r_scores'][gt_tag]['rouge1'] += (r_scores['rouge1'].fmeasure - avg_scores['r_scores'][gt_tag]['rouge1']) / file_count
-                avg_scores['r_scores'][gt_tag]['rouge2'] += (r_scores['rouge2'].fmeasure - avg_scores['r_scores'][gt_tag]['rouge2']) / file_count
-                avg_scores['r_scores'][gt_tag]['rougeL'] += (r_scores['rougeL'].fmeasure - avg_scores['r_scores'][gt_tag]['rougeL']) / file_count
-                avg_scores['llm_scores'][gt_tag] += (llm_score - avg_scores['llm_scores'][gt_tag]) / file_count
-                avg_scores['num_words'][gt_tag] += (num_words - avg_scores['num_words'][gt_tag]) / file_count
-
-                logger.info(f"  # of words: {num_words}")
-                logger.info(f"  METEOR Score: {m_score}")
-                logger.info(f"  BERTScore Precision: {b_scores['precision']}")
-                logger.info(f"  BERTScore Recall: {b_scores['recall']}")
-                logger.info(f"  BERTScore F1: {b_scores['f1']}")
-                logger.info(f"  ROUGE-1: {r_scores['rouge1'].fmeasure}")
-                logger.info(f"  ROUGE-2: {r_scores['rouge2'].fmeasure}")
-                logger.info(f"  ROUGE-L: {r_scores['rougeL'].fmeasure}")
-                logger.info(f"  LLM Score: {llm_score}")
-
-                logger.info(f"  [Avg] # of words: {avg_scores['num_words'][gt_tag]}")
-                logger.info(f"  [Avg] METEOR Score: {avg_scores['m_scores'][gt_tag]}")
-                logger.info(f"  [Avg] BERTScore Precision: {avg_scores['b_scores'][gt_tag]['precision']}")
-                logger.info(f"  [Avg] BERTScore Recall: {avg_scores['b_scores'][gt_tag]['recall']}")
-                logger.info(f"  [Avg] BERTScore F1: {avg_scores['b_scores'][gt_tag]['f1']}")
-                logger.info(f"  [Avg] ROUGE-1: {avg_scores['r_scores'][gt_tag]['rouge1']}")
-                logger.info(f"  [Avg] ROUGE-2: {avg_scores['r_scores'][gt_tag]['rouge2']}")
-                logger.info(f"  [Avg] ROUGE-L: {avg_scores['r_scores'][gt_tag]['rougeL']}")
-                logger.info(f"  [Avg] LLM Score: {avg_scores['llm_scores'][gt_tag]}")
 
         # Update running averages
         file_count += 1
