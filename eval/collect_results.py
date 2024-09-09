@@ -19,7 +19,9 @@ def process_json_files(root_dir, file_paths, output_path):
         "ROUGE-1": pd.DataFrame(),
         "ROUGE-2": pd.DataFrame(),
         "ROUGE-L": pd.DataFrame(),
-        "LLM_Judge Score": pd.DataFrame()
+        "LLM_Judge": pd.DataFrame(),
+        "LLM_Judge_w_C": pd.DataFrame(),
+        "NUM_WORDS": pd.DataFrame(),
     }
 
     for file_path in file_paths:
@@ -53,7 +55,19 @@ def process_json_files(root_dir, file_paths, output_path):
         llm_scores = data['avg_scores']['llm_scores']
         llm_df = pd.DataFrame(llm_scores, index=[algorithm_name])
         llm_df.columns = [convert_column_name(col) for col in llm_df.columns]
-        data_frames["LLM_Judge Score"] = pd.concat([data_frames["LLM_Judge Score"], llm_df])
+        data_frames["LLM_Judge"] = pd.concat([data_frames["LLM_Judge"], llm_df])
+
+        # llm_scores_c -> LLM_Judge Score with conciseness
+        llm_scores_c = data['avg_scores']['llm_scores_c']
+        llm_df = pd.DataFrame(llm_scores_c, index=[algorithm_name])
+        llm_df.columns = [convert_column_name(col) for col in llm_df.columns]
+        data_frames["LLM_Judge_w_C"] = pd.concat([data_frames["LLM_Judge_w_C"], llm_df])
+
+        # avg # words
+        llm_scores_c = data['avg_scores']['num_words']
+        llm_df = pd.DataFrame(llm_scores_c, index=[algorithm_name])
+        llm_df.columns = [convert_column_name(col) for col in llm_df.columns]
+        data_frames["NUM_WORDS"] = pd.concat([data_frames["NUM_WORDS"], llm_df])
 
     # 엑셀 파일로 저장
     with pd.ExcelWriter(output_path) as writer:
@@ -69,15 +83,20 @@ def main():
 
     root_dir = '/mnt/data_disk/work/Space-awareVLM/eval_results/'
     file_paths = [
-        'llava-v1.6-mistral-7b-hf/llava-v1.6-mistral-7b-hf_20240904_001856.txt',
-        'llava-v1.6-vicuna-7b-hf/llava-v1.6-vicuna-7b-hf_20240903_214859.txt',
-        'llama3-llava-next-8b-hf/llama3-llava-next-8b-hf_20240904_001730.txt',
-        'llava-v1.6-vicuna-13b-hf/llava-v1.6-vicuna-13b-hf_20240904_005155.txt',
-        'gpt-4o-mini-2024-07-18/gpt-4o-mini-2024-07-18_20240904_052623.txt',
-        'llava-onevision-qwen2-0.5b-si/llava-onevision-qwen2-0.5b-si_20240904_075029.txt',
-        'llava-onevision-qwen2-7b-si/llava-onevision-qwen2-7b-si_20240904_083049.txt',
-        'ft_llava-onevision-qwen2-0.5b-si_bs2_gas4_20240902_11_07_20/ft_llava-onevision-qwen2-0.5b-si_bs2_gas4_20240902_11_07_20_20240902_221143.txt',
-        'ft_llava-onevision-qwen2-7b-si_bs1_gas8_20240902_12_25_58/ft_llava-onevision-qwen2-7b-si_bs1_gas8_20240902_12_25_58_20240903_202201.txt',
+        'llava-v1.6-mistral-7b-hf/llava-v1.6-mistral-7b-hf_20240905_084551.txt',
+        'llava-v1.6-vicuna-7b-hf/llava-v1.6-vicuna-7b-hf_20240905_194140.txt',
+        'llama3-llava-next-8b-hf/llama3-llava-next-8b-hf_20240906_003633.txt',
+        'llava-v1.6-vicuna-13b-hf/llava-v1.6-vicuna-13b-hf_20240906_023444.txt',
+ #       'llava-v1.6-34b-hf/',
+
+        'llava-next-72b-hf/llava-next-72b-hf_20240905_144521.txt',
+        'gpt-4o-mini-2024-07-18/gpt-4o-mini-2024-07-18_20240905_130944.txt',
+        'gpt-4o-2024-08-06/gpt-4o-2024-08-06_20240906_070053.txt',
+        'llava-onevision-qwen2-0.5b-si/llava-onevision-qwen2-0.5b-si_20240906_015732.txt',
+        'llava-onevision-qwen2-7b-si/llava-onevision-qwen2-7b-si_20240906_024924.txt',
+
+        'ft_llava-onevision-qwen2-0.5b-si_bs2_gas4_20240902_11_07_20/ft_llava-onevision-qwen2-0.5b-si_bs2_gas4_20240902_11_07_20_20240905_043628.txt',
+        'ft_llava-onevision-qwen2-7b-si_bs1_gas8_20240902_12_25_58/ft_llava-onevision-qwen2-7b-si_bs1_gas8_20240902_12_25_58_20240905_141024.txt',
     ]
 
     # JSON 파일 처리 및 엑셀 파일 생성

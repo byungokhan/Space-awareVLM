@@ -56,7 +56,11 @@ def eval_text_llm_judge(gt_text, infer_text):
                  '<|The End of Assistant A\'s Description|>\n' \
 
     llm_reason_score = gpt_model.generate_llm_response(llm_system, llm_prompt, seed=17, temperature=0.0)
-    ratings = re.findall(r'Rating: \[\[(\d+\.?\d*)\]\]', llm_reason_score)
+
+    if isinstance(llm_reason_score, str):
+        ratings = re.findall(r'Rating: \[\[(\d+\.?\d*)\]\]', llm_reason_score)
+    else:
+        ratings = []
 
     if ratings:  # 리스트가 비어있지 않으면
         score = float(ratings[0])
@@ -87,7 +91,11 @@ def eval_text_llm_judge_w_conciseness(gt_text, infer_text):
                  '<|The End of Assistant A\'s Description|>\n' \
 
     llm_reason_score = gpt_model.generate_llm_response(llm_system, llm_prompt, seed=17, temperature=0.0)
-    ratings = re.findall(r'Rating: \[\[(\d+\.?\d*)\]\]', llm_reason_score)
+
+    if isinstance(llm_reason_score, str):
+        ratings = re.findall(r'Rating: \[\[(\d+\.?\d*)\]\]', llm_reason_score)
+    else:
+        ratings = []
 
     if ratings:  # 리스트가 비어있지 않으면
         score = float(ratings[0])
