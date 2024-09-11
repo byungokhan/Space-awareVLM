@@ -8,6 +8,7 @@ import json
 import copy
 from datetime import datetime
 import xml.etree.ElementTree as ET
+import time
 
 from eval_savlm import init_logging, eval_text, update_and_logging_results
 from eval_prompt import get_prompt
@@ -103,6 +104,7 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
     }
 
     file_count = 1
+    avg_infer_time=0.0
 
     for xml_idx, xml_path in enumerate(anno_list):
 
@@ -134,6 +136,7 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
             img_path = xml_path.replace('.xml', '.png')
 
         image = Image.open(img_path)
+        inference_time = 0.0
 
         responses = []
         for i, sep in enumerate(list_ids_sep):
@@ -153,6 +156,7 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
             else:
                 gt_tag = None
 
+            start_time = time.time()
             if 'gpt' in model_name:
                 text_output = model.generate_llm_response(sys_prompt, user_prompt, img_path)
             else:
@@ -160,6 +164,9 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
                     text_output = llava_ov_inference(image, sys_prompt, user_prompt, model, tokenizer, processor, device)
                 else:
                     text_output = llava_next_inference_latest(image, sys_prompt, user_prompt, model, model_name, processor, device)
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            inference_time += elapsed_time
 
             responses.append(text_output)
 
@@ -189,11 +196,12 @@ def evaluate_zero_shot_vlm(anno_list, model, model_name, tokenizer, processor, d
                                                                     results,
                                                                     logger)
 
-
+        avg_infer_time = ((avg_infer_time * (file_count - 1)) + inference_time) / file_count
+        logger.info(f"{file_count}: AVG. Inference Time: {avg_infer_time} secs")
         # Update running averages
         file_count += 1
 
-    return tag_scores, avg_scores
+    return tag_scores, avg_scores, avg_infer_time
 
 
 def main():
@@ -231,8 +239,9 @@ def main():
             #model.to(device)
 
     elif 'gpt' in args.model_ckpt_path:
+
         model_name = 'gpt'
-        model = gpt_wrapper('gpt-4o-2024-08-06', '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')
+        model = gpt_wrapper(args.model_ckpt_path, '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')
         tokenizer = None
         processor = None
         device = None
@@ -252,7 +261,7 @@ def main():
         if any(folder in xml_file for folder in target_folders)
     ]
 
-    tag_scores, avg_scores = evaluate_zero_shot_vlm(filtered_anno_list, model, model_name, tokenizer, processor, device, logger)
+    tag_scores, avg_scores, avg_infer_time = evaluate_zero_shot_vlm(filtered_anno_list, model, model_name, tokenizer, processor, device, logger)
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file_name = f"{model_ckpt_name}_{current_time}.txt"
@@ -260,6 +269,7 @@ def main():
 
     result = {
         "avg_scores": avg_scores,
+        "avg_inference_sec": avg_infer_time,
         "tag_scores": tag_scores
     }
 

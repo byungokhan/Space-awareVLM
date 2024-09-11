@@ -19,6 +19,7 @@ from datetime import datetime
 import json
 import re
 import logging
+import time
 from eval_xmls_llm2 import eval_text_llm_judge, eval_text_llm_judge_w_conciseness
 
 def init_logging(outdir, model_ckpt_name):
@@ -144,6 +145,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
     }
 
     file_count = 1
+    avg_infer_time = 0.0
 
     for xml_idx, xml_path in enumerate(anno_list):
 
@@ -195,6 +197,7 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
                                           return_tensors="pt").unsqueeze(0).to(device)
         image_sizes = [image.size]
 
+        start_time = time.time()
         cont = model.generate(
             input_ids,
             images=image_tensor,
@@ -203,6 +206,10 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             temperature=0,
             max_new_tokens=4096,
         )
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        avg_infer_time = ((avg_infer_time * (file_count - 1)) + elapsed_time) / file_count
+        logger.info(f"{file_count}: AVG. Inference Time: {avg_infer_time} secs")
 
         text_outputs = tokenizer.batch_decode(cont, skip_special_tokens=True)
 
@@ -241,12 +248,10 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
                                                                 file_count,
                                                                 results,
                                                                 logger)
-
-
         # Update running averages
         file_count += 1
 
-    return tag_scores, avg_scores
+    return tag_scores, avg_scores, avg_infer_time
 
 def main():
 
@@ -304,7 +309,7 @@ def main():
         if any(folder in xml_file for folder in target_folders)
     ]
 
-    tag_scores, avg_scores = evaluate_vlm(filtered_anno_list, model, image_processor, tokenizer, device, logger)
+    tag_scores, avg_scores, avg_infer_time = evaluate_vlm(filtered_anno_list, model, image_processor, tokenizer, device, logger)
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file_name = f"{model_ckpt_name}_{current_time}.txt"
@@ -312,7 +317,8 @@ def main():
 
     result = {
         "avg_scores": avg_scores,
-        "tag_scores": tag_scores
+        "avg_inference_sec": avg_infer_time,
+        "tag_scores": tag_scores,
     }
 
     # Write the result to the text file
