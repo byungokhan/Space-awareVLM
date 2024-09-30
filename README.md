@@ -26,8 +26,8 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
 ```
 
 ### Dataset Download
-* Download link: [SAIT dataset](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ESGRDqkurZZMmmGUAOEeIxIBjQpq5KCberHw5PS6t7QrXQ?e=ucKEVz)
-* Download link: [SA-Bench](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/Eb_LeNjmO3NJjErJMl3fYUMBSMdCGFUBI6EcnW7VgLvX6g?e=JXprgI)
+* Download link: [SAIT dataset](https://tinyurl.com/saitdataseticra25)
+* Download link: [SA-Bench](https://tinyurl.com/sabenchicra25)
 
 ### Training
 ```bash
