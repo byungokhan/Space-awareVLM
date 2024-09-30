@@ -5,7 +5,7 @@ import logging
 class llm_wrapper():
     def __init__(self, llm_model_name):
         # Load the LLaMA 3 model and tokenizer from Hugging Face
-        self.token = "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"
+        self.token = "Use-your-huggingface-token"
 
         # Initialize the tokenizer and model
         self.tokenizer = AutoTokenizer.from_pretrained(llm_model_name, use_auth_token=self.token)
