@@ -6,7 +6,7 @@ Welcome to the official repository for Space-Aware Vision-Language Model (SA-VLM
 Guide dog robots hold the potential to significantly improve mobility and safety for visually impaired people. However, traditional Vision-Language Models (VLMs) often struggle with accurately interpreting spatial relationships, which is crucial for navigation in complex environments.
 
 Our work introduces:
-* **SAIT Dataset**: A dataset designed to enhance VLMs' understanding of physical environments by focusing on virtual paths and surroundings in 3D space.
+* **SAIT Dataset**: A dataset automatically generated using [the pipeline](https://github.com/yochin/PathGuidedVQA), designed to enhance VLMs' understanding of physical environments by focusing on virtual paths and 3D surroundings.
 * **SA-Bench**: A benchmark with an evaluation protocol to assess the effectiveness of VLMs in delivering walking guidance.
 By integrating spatial awareness into VLMs, our approach enables guide dog robots to provide more accurate and concise guidance, improving the safety and mobility of visually impaired users.
 
