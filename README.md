@@ -29,11 +29,12 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
 * We utilized LLaVA-OneVision as the baseline network. For installation and training instructions, please refer to this [link](https://github.com/LLaVA-VL/LLaVA-NeXT).
 
 ### Evaluation
+* If you would like to evaluate your VLM using SA-Bench, please use the following script.
 ```bash
 CUDA_VISIBLE_DEVICES=${GPU_NUM} python ./eval/eval_savlm.py \
---model_ckpt_path (path-to-ckpt-dir) \
---eval_db_dir (path-to-SA-Bench-dir) \
---output_dir (path-to-output-dir)
+--model_ckpt_path <path-to-ckpt-dir> \
+--eval_db_dir <path-to-SA-Bench-dir> \
+--output_dir <path-to-output-dir>
 ```
 
 ### Results
