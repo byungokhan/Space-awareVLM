@@ -3,9 +3,10 @@ import xml.etree.ElementTree as ET
 import glob
 import os
 import argparse
+from eval.private import GPT_API_KEY
 
 # OpenAI API 키 설정
-client = OpenAI(api_key='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')
+client = OpenAI(api_key=GPT_API_KEY)
 
 def load_and_parse_xml(file_path):
     tree = ET.parse(file_path)

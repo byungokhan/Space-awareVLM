@@ -59,11 +59,11 @@ def process_json_files(root_dir, file_paths, output_path):
         llm_df.columns = [convert_column_name(col) for col in llm_df.columns]
         data_frames["LLM_Judge"] = pd.concat([data_frames["LLM_Judge"], llm_df])
 
-        # llm_scores_c -> LLM_Judge Score with conciseness
-        llm_scores_c = data['avg_scores']['llm_scores_c']
-        llm_df = pd.DataFrame(llm_scores_c, index=[algorithm_name])
-        llm_df.columns = [convert_column_name(col) for col in llm_df.columns]
-        data_frames["LLM_Judge_w_C"] = pd.concat([data_frames["LLM_Judge_w_C"], llm_df])
+        # # llm_scores_c -> LLM_Judge Score with conciseness
+        # llm_scores_c = data['avg_scores']['llm_scores_c']
+        # llm_df = pd.DataFrame(llm_scores_c, index=[algorithm_name])
+        # llm_df.columns = [convert_column_name(col) for col in llm_df.columns]
+        # data_frames["LLM_Judge_w_C"] = pd.concat([data_frames["LLM_Judge_w_C"], llm_df])
 
         # avg # words
         avg_num_words = data['avg_scores']['num_words']
@@ -80,7 +80,7 @@ def process_json_files(root_dir, file_paths, output_path):
 
 
 # Updated function to handle a single selected description
-def plot_metrics_bar_chart(data_frames, algorithms, selected_metrics, selected_description):
+def plot_metrics_bar_chart(data_frames, algorithms, algorithm_names, selected_metrics, selected_description):
     # Ensure only valid selected metrics are used
     metrics = [metric for metric in selected_metrics if metric in data_frames.keys()]
     algorithms = [algo.split('/')[-1].replace('.txt', '') for algo in algorithms]
@@ -114,18 +114,18 @@ def plot_metrics_bar_chart(data_frames, algorithms, selected_metrics, selected_d
 
     # Plot bars for each algorithm
     for i, alg in enumerate(algorithms):
-        ax.bar(index + i * bar_width, algorithm_data[alg], bar_width, label=alg)
+        ax.bar(index + i * bar_width, algorithm_data[alg], bar_width, label=algorithm_names[i])
 
     # Add labels, title, and custom x-axis tick labels, etc.
-    ax.set_xlabel('Metrics')
-    ax.set_ylabel('Scores')
-    ax.set_title(f'Comparison of Algorithms Across Metrics for "{selected_description}"')
+    ax.set_xlabel('Metrics', fontsize=10)
+    ax.set_ylabel('Scores', fontsize=10)
+#    ax.set_title(f'Comparison of Algorithms Across Metrics for "{selected_description}"')
     ax.set_xticks(index + bar_width / 2 * len(algorithms))
-    ax.set_xticklabels(metrics)
-    ax.legend()
+    ax.set_xticklabels(metrics, fontsize=15)
+    ax.legend(fontsize=11)
 
     # Rotate x-axis labels for clarity
-    plt.xticks(rotation=45)
+    plt.xticks()
 
     plt.tight_layout()
     plt.show()
@@ -143,7 +143,7 @@ def main():
         'llava-v1.6-vicuna-7b-hf/llava-v1.6-vicuna-7b-hf_20240905_194140.txt',
         'llama3-llava-next-8b-hf/llama3-llava-next-8b-hf_20240906_003633.txt',
         'llava-v1.6-vicuna-13b-hf/llava-v1.6-vicuna-13b-hf_20240906_023444.txt',
-        'llava-v1.6-34b-hf/llava-v1.6-34b-hf_20240909_071951.txt',
+        'llava-v1.6-34b_avg_scores_20240903_052123.txt',
         'llava-next-72b-hf/llava-next-72b-hf_20240905_144521.txt',
         'gpt-4o-mini-2024-07-18/gpt-4o-mini-2024-07-18_20240911_082843.txt',
         'gpt-4o-2024-08-06/gpt-4o-2024-08-06_20240906_070053.txt',
@@ -161,16 +161,27 @@ def main():
     data_frames = process_json_files(root_dir, file_paths, output_filename)
 
     selected_algorithms = [
+        'llava-v1.6-vicuna-7b-hf/llava-v1.6-vicuna-7b-hf_20240905_194140.txt',
+        'llava-v1.6-34b_avg_scores_20240903_052123.txt',
+        'llava-next-72b-hf/llava-next-72b-hf_20240905_144521.txt',
         'gpt-4o-2024-08-06/gpt-4o-2024-08-06_20240906_070053.txt',
-        'llava-onevision-qwen2-0.5b-si/llava-onevision-qwen2-0.5b-si_20240906_015732.txt',
         'llava-onevision-qwen2-7b-si/llava-onevision-qwen2-7b-si_20240906_024924.txt',
+        'ft_llava-onevision-qwen2-7b-si_ng8_bs1_gas8_epoch1_20240909_09_42_47/ft_llava-onevision-qwen2-7b-si_ng8_bs1_gas8_epoch1_20240909_09_42_47_20240910_213428.txt',
+    ]
+    algorithm_names = [
+        'llava-v1.6-vicuna-7b',
+        'llava-v1.6-34b',
+        'llava-next-72b',
+        'gpt-4o',
+        'llava-onevision-qwen2-7b',
+        'SA-VLM-7b',
     ]
 
     # Select specific metrics to plot
     selected_metrics = [
         "METEOR score",
         "BertScore",
-        "ROUGE-1",
+        "ROUGE-L",
         "LLM_Judge"
     ]
 
@@ -183,7 +194,7 @@ def main():
     selected_description = 'RECOMMEND'
 
     # Plot the bar chart with selected algorithms and metrics
-    plot_metrics_bar_chart(data_frames, selected_algorithms, selected_metrics, selected_description)
+    plot_metrics_bar_chart(data_frames, selected_algorithms, algorithm_names, selected_metrics, selected_description)
 
 if __name__ == "__main__":
     main()
