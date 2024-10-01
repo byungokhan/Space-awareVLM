@@ -21,17 +21,12 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
 * PyTorch
 * CUDA
 
-### Installation
-```bash
-```
-
 ### Dataset Download
 * Download link: [SAIT dataset](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ESGRDqkurZZMmmGUAOEeIxIBc0wxOMa2yQDMzriMHhU-SA?e=laz3nd)
 * Download link: [SA-Bench](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/Eb_LeNjmO3NJjErJMl3fYUMBvNET3KM74bDEkIpiBoRDDA?e=AQD41t)
 
-### Training
-```bash
-```
+### Installation & Training
+* We utilized LLaVA-OneVision as the baseline network. For installation and training instructions, please refer to this [link](https://github.com/LLaVA-VL/LLaVA-NeXT).
 
 ### Evaluation
 ```bash
