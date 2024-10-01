@@ -30,6 +30,10 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
 
 ### Evaluation
 ```bash
+CUDA_VISIBLE_DEVICES=${GPU_NUM} python ./eval/eval_savlm.py \
+--model_ckpt_path (path-to-ckpt-dir) \
+--eval_db_dir (path-to-SA-Bench-dir) \
+--output_dir (path-to-output-dir)
 ```
 
 ### Results
