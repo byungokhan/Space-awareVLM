@@ -238,11 +238,10 @@ def main():
             model.eval()
             #model.to(device)
 
-    from eval.private import GPT_API_KEY
     elif 'gpt' in args.model_ckpt_path:
 
         model_name = 'gpt'
-        model = gpt_wrapper(args.model_ckpt_path, GPT_API_KEY)
+        model = gpt_wrapper(args.model_ckpt_path, 'use-your-openai-key')
         tokenizer = None
         processor = None
         device = None
