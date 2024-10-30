@@ -20,6 +20,14 @@ def translate_xml_elements(root, tags_to_translate):
     for elem in root.iter():
         if elem.tag in tags_to_translate and elem.text:
             elem.text = translate_text(elem.text)
+            #print('elem.tag: ', elem.tag)
+            if 'recommend' in elem.tag:
+                decision = get_decision(elem.text)
+                # 'decision'이라는 태그를 생성하고, 'decision' 변수 값을 설정합니다.
+                decision_elem = ET.Element('decision')
+                decision_elem.text = decision
+                # 현재 요소(elem)에 'decision' 태그를 추가합니다.
+                elem.append(decision_elem)
 
 def translate_text(text, dest_lang='en'):
     if not text:
@@ -43,11 +51,35 @@ def translate_text(text, dest_lang='en'):
 
     return translated_text
 
+def get_decision(text, dest_lang='en'):
+    if not text:
+        return text
+
+    print("orgin: ", text)
+
+    response = (client.chat.completions.create
+                (model="gpt-4o",
+                 messages=[
+                     {"role": "system",
+                      "content": "You are a helpful walking guide assistant for visually impaired persons."},
+                     {"role": "user",
+                      "content": f"Based on the following information, decide whether the user can proceed safely. Answer 'go' if they can proceed, or 'stop' if they cannot. Only answer 'go' or 'stop'. Information: '{text}'"}
+                 ],
+                max_tokens=1024,
+                temperature=0.0))
+    decision = response.choices[0].message.content.strip()
+    # remove ", '
+    decision = decision.replace('"', '')
+    decision = decision.replace("'", '')
+    print("**** Decision: ", decision)
+
+    return decision
+
 def main():
 
     parser = argparse.ArgumentParser(description='Evaluate Space-aware Vision-Language Model')
     parser.add_argument('--xml_root_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/m240829', help='root dir of xml files')
-    parser.add_argument('--dest_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/m240829en', help='destination root dir of xml files')
+    parser.add_argument('--dest_dir', type=str, default='/mnt/data_disk/dbs/gd_space_aware/manual/dm240829en', help='destination root dir of xml files')
     args = parser.parse_args()
 
     xml_list = glob.glob(f'{args.xml_root_dir}/**/*xml', recursive=True)

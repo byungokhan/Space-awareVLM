@@ -23,10 +23,11 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 from gpt_wrapper import gpt_wrapper
 from llm_wrapper import llm_wrapper
+from private import GPT_API_KEY
 
 
 # gpt_model = gpt_wrapper('gpt-4o-mini-2024-07-18', 'use-your-openai-key')
-gpt_model = gpt_wrapper('gpt-4o-2024-08-06', 'use-your-openai-key')
+gpt_model = gpt_wrapper('gpt-4o-2024-08-06', GPT_API_KEY)
 # gpt_model = llm_wrapper('meta-llama/Meta-Llama-3.1-8B-Instruct')
 
 def parse_args():

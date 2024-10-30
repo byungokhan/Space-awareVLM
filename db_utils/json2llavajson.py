@@ -2,13 +2,14 @@ import os
 import json
 import argparse
 import re
+from translate_xmls import get_decision
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Generate json file for the llava training framework')
 
     parser.add_argument(
-        '--gt_dir', default='/mnt/data_disk/dbs/gd_space_aware/auto_gen/2024.09.08_20k/',
+        '--gt_dir', default='/mnt/data_disk/dbs/gd_space_aware/auto_gen/d2024.09.08_20k/',
         metavar='DIRECTORY for ground truth',
         help='directory which contains images and object properties')
 
@@ -93,6 +94,7 @@ def json_to_text(data):
         <right_desc>{data['right_desc']}</right_desc>
         <path_desc>{data['path_desc']}</path_desc>
         <recommend>{data['recommend']}</recommend>
+        <decision>{get_decision(data['recommend'])}</decision>
         <summary_answer>{data['summary_answer']}</summary_answer>
         """
     result += "<path_array>"

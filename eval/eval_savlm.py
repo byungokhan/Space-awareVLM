@@ -21,6 +21,7 @@ import re
 import logging
 import time
 from eval_xmls_llm2 import eval_text_llm_judge, eval_text_llm_judge_w_conciseness
+from private import GPT_API_KEY
 
 def init_logging(outdir, model_ckpt_name):
     # 로거 생성
@@ -132,7 +133,8 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
     for i, tag in enumerate(eval_gt_tags):
         eval_gt_tags[i] = './/' + tag + '/' + eval_gt_degree
     eval_gt_tags.append('.//recommend')
-    eval_infer_tags = ['dest_desc', 'left_desc', 'right_desc', 'path_desc', 'recommend']
+    eval_gt_tags.append('.//recommend/decision')
+    eval_infer_tags = ['dest_desc', 'left_desc', 'right_desc', 'path_desc', 'recommend', 'decision']
 
     tag_scores = {}
     avg_scores = {
@@ -146,6 +148,11 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
 
     file_count = 1
     avg_infer_time = 0.0
+
+    num_tp = 0
+    num_fp = 0
+    num_fn = 0
+    num_tn = 0
 
     for xml_idx, xml_path in enumerate(anno_list):
 
@@ -240,8 +247,21 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
             gt_dest_desc = gt_dest_desc.replace("India", "sidewalk")
             logger.info(f"   [gt]: {gt_dest_desc}")
 
-            results = eval_text(gt_dest_desc, output_desc)
-            tag_scores, avg_scores = update_and_logging_results(tag_scores,
+            if "decision" in gt_tag:
+                if gt_dest_desc == 'go' and output_desc == 'go':
+                    num_tp += 1
+                elif gt_dest_desc == 'stop' and output_desc == 'go':
+                    num_fp += 1
+                elif gt_dest_desc == 'go' and output_desc == 'stop':
+                    num_fn += 1
+                elif gt_dest_desc == 'stop' and output_desc == 'stop':
+                    num_tn += 1
+                else:
+                    logger.info(f"Strange Decision - gt:{gt_dest_desc}, pred:{output_desc}")
+                logger.info(f"decision: #TP={num_tp}, #FP={num_fp}, #FN={num_fn}, #TN={num_tn}")
+            else:
+                results = eval_text(gt_dest_desc, output_desc)
+                tag_scores, avg_scores = update_and_logging_results(tag_scores,
                                                                 avg_scores,
                                                                 xml_filename,
                                                                 gt_tag,
@@ -250,8 +270,16 @@ def evaluate_vlm(anno_list, model, image_processor, tokenizer, device, logger):
                                                                 logger)
         # Update running averages
         file_count += 1
+        decision_result = {'num_tp': num_tp,
+                           'num_fp': num_fp,
+                           'num_fn': num_fn,
+                           'num_tn': num_tn,
+                           'recall': num_tp / (num_tp + num_fn) if (num_tp + num_fn) != 0 else 0,
+                           'precision': num_tp / (num_tp + num_fp) if (num_tp + num_fp) != 0 else 0,
+                           'accuracy': (num_tp + num_tn) / (num_tp + num_fp + num_fn + num_tn) if (num_tp + num_fp + num_fn + num_tn) != 0 else 0
+                            }
 
-    return tag_scores, avg_scores, avg_infer_time
+    return tag_scores, avg_scores, avg_infer_time, decision_result
 
 def main():
 
@@ -309,7 +337,7 @@ def main():
         if any(folder in xml_file for folder in target_folders)
     ]
 
-    tag_scores, avg_scores, avg_infer_time = evaluate_vlm(filtered_anno_list, model, image_processor, tokenizer, device, logger)
+    tag_scores, avg_scores, avg_infer_time, decision_result = evaluate_vlm(filtered_anno_list, model, image_processor, tokenizer, device, logger)
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file_name = f"{model_ckpt_name}_{current_time}.txt"
@@ -318,6 +346,7 @@ def main():
     result = {
         "avg_scores": avg_scores,
         "avg_inference_sec": avg_infer_time,
+        "decision_result": decision_result,
         "tag_scores": tag_scores,
     }
 
