@@ -16,25 +16,20 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
 * **Improved VLM Performance**: Our space-aware instruction-tuned model outperforms state-of-the-art algorithms in providing walking guidance.
 
 ## Getting Started
-### Prerequisites
-* Python
-* PyTorch
-* CUDA
-
-### Installation
-```bash
-```
-
 ### Dataset Download
 * Download link: [SAIT dataset](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ESGRDqkurZZMmmGUAOEeIxIBc0wxOMa2yQDMzriMHhU-SA?e=laz3nd)
 * Download link: [SA-Bench](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/Eb_LeNjmO3NJjErJMl3fYUMBvNET3KM74bDEkIpiBoRDDA?e=AQD41t)
 
-### Training
-```bash
-```
+### Installation & Training
+* We utilized LLaVA-OneVision as the baseline network. For installation and training instructions, please refer to this [link](https://github.com/LLaVA-VL/LLaVA-NeXT).
 
 ### Evaluation
+* If you would like to evaluate your VLM using SA-Bench, please use the following script.
 ```bash
+CUDA_VISIBLE_DEVICES=${GPU_NUM} python ./eval/eval_savlm.py \
+--model_ckpt_path <path-to-ckpt-dir> \
+--eval_db_dir <path-to-SA-Bench-dir> \
+--output_dir <path-to-output-dir>
 ```
 
 ### Results
