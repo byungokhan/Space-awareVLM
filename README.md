@@ -49,8 +49,15 @@ Our experiments demonstrate that the space-aware instruction-tuned model:
 For detailed results and analysis, refer to the paper.
 
 ## Citation
-[@han2025spaceawareinstructiontuningdataset](https://arxiv.org/abs/2502.07183)  
-ByungOk Han, Woo-han Yun, Beom-Su Seo, Jaehong Kim. *Space-Aware Instruction Tuning: Dataset and Benchmark for Guide Dog Robots Assisting the Visually Impaired*. arXiv preprint arXiv:2502.07183, 2025.
+@misc{sait_icra2025,
+  title={Space-Aware Instruction Tuning: Dataset and Benchmark for Guide Dog Robots Assisting the Visually Impaired},
+  author={ByungOk Han and Woo-han Yun and Beom-Su Seo and Jaehong Kim},
+  year={2025},
+  eprint={2502.07183},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2502.07183},
+}
 
 ## Acknowledgments
 This work was supported by the Institute of Information & communications Technology Planning & Evaluation(IITP) grant funded by the Korea government(MSIT) (RS-2023-00215760, Guide Dog: Development of Navigation AI Technology of a Guidance Robot for the Visually Impaired Person). 
