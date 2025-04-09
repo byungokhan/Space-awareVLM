@@ -50,7 +50,7 @@ For detailed results and analysis, refer to the paper.
 
 ## Citation
 ```bibtex
-@misc{han2025spaceawareinstructiontuningdataset,
+@misc{savlm_icra2025,
   title={Space-Aware Instruction Tuning: Dataset and Benchmark for Guide Dog Robots Assisting the Visually Impaired},
   author={ByungOk Han and Woo-han Yun and Beom-Su Seo and Jaehong Kim},
   year={2025},
