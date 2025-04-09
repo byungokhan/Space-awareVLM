@@ -16,10 +16,18 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
 * **Improved VLM Performance**: Our space-aware instruction-tuned model outperforms state-of-the-art algorithms in providing walking guidance.
 
 ## Getting Started
+
 ### Dataset Download
-We are currently performing data post-processing to address some considerations. If you require the data immediately, please contact us.
-<!--* Download link: [SAIT dataset](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ESGRDqkurZZMmmGUAOEeIxIBc0wxOMa2yQDMzriMHhU-SA?e=laz3nd)-->
-<!--* Download link: [SA-Bench](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/Eb_LeNjmO3NJjErJMl3fYUMBvNET3KM74bDEkIpiBoRDDA?e=AQD41t)-->
+1. Due to copyright restrictions, please download the SideGuide images as follows:
+   - **If you are located in Korea**, download the "인도 보행 영상" dataset from [AI Hub](https://www.aihub.or.kr/).
+   - **If you are outside Korea**, use [this link](https://docs.google.com/forms/d/e/1FAIpQLScBmoVoj0d-omBOVCHGjhRislXP0TYzRqaUJOmJcqN6ylQcxQ/viewform) to request access to the dataset.
+2. Download the following datasets:
+   - [SAIT]()
+   - [SA-Bench]()
+3. Dataset Preparation:
+   - For the **SAIT dataset**, copy the image files listed in `llava_gd_space_aware.json` from the downloaded SideGuide dataset into the `original_images` folder.
+   - For the **SA-Bench dataset**, each image should have a corresponding `.xml` file with the same filename.  
+     - If an image is missing but the `.xml` file exists, copy the corresponding image from the SideGuide dataset.
 
 ### Installation & Training
 * We utilized LLaVA-OneVision as the baseline network. For installation and training instructions, please refer to this [link](https://github.com/LLaVA-VL/LLaVA-NeXT).
