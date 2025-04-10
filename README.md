@@ -18,10 +18,10 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
 ## Getting Started
 
 ### Dataset Download
-1. Due to copyright restrictions, please download the SideGuide images as follows:
-   - **If you are located in Korea**, download the "인도 보행 영상" dataset from [AI Hub](https://www.aihub.or.kr/).
-   - **If you are outside Korea**, use [this link](https://docs.google.com/forms/d/e/1FAIpQLScBmoVoj0d-omBOVCHGjhRislXP0TYzRqaUJOmJcqN6ylQcxQ/viewform) to request access to the dataset.
-2. Download the following datasets:
+1. Our dataset uses some images from the SideGuide dataset. Due to copyright restrictions, please download the SideGuide images as follows:
+   - **If you are Korean**, download the "인도 보행 영상" dataset from [AI Hub](https://www.aihub.or.kr/).
+   - **If you are not Korean**, use [this link](https://docs.google.com/forms/d/e/1FAIpQLScBmoVoj0d-omBOVCHGjhRislXP0TYzRqaUJOmJcqN6ylQcxQ/viewform) to request access to the dataset.
+2. Download the following datasets. The following datasets includes images and labels, excluding the Sideguide images.:
    - [SAIT](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ERKNDsdlNSlOmtfjTm7hgIUBtZNUxCFetVAp71Wd8WiEVw?e=scaLi3)
    - [SA-Bench](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ETcHGbBsZO9NktZHpZDFePIBgbnCH6s5UoMqAm9hcbjkcg?e=lNLhgS)
 3. Dataset Preparation:
