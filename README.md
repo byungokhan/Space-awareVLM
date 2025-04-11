@@ -23,7 +23,7 @@ By integrating spatial awareness into VLMs, our approach enables guide dog robot
    - **If you are not Korean**, use [this link](https://docs.google.com/forms/d/e/1FAIpQLScBmoVoj0d-omBOVCHGjhRislXP0TYzRqaUJOmJcqN6ylQcxQ/viewform) to request access to the dataset.
 2. Download the following datasets. The following datasets includes images and labels, excluding the Sideguide images.:
    - [SAIT](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ERKNDsdlNSlOmtfjTm7hgIUBtZNUxCFetVAp71Wd8WiEVw?e=scaLi3)
-   - [SA-Bench](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/ETcHGbBsZO9NktZHpZDFePIBgbnCH6s5UoMqAm9hcbjkcg?e=bSVODU)
+   - [SA-Bench](https://o365ust-my.sharepoint.com/:u:/g/personal/byungok_han_office_ust_ac_kr/EcelnbSd4mNErSVTRVeyp1oBt1WK3aceaQDlmZtzCiAmfQ?e=sfCuZq)
 3. Dataset Preparation:
    - For the **SAIT dataset**, copy the image files listed in `llava_gd_space_aware.json` from the downloaded SideGuide dataset into the `original_images` folder.
    - For the **SA-Bench**, each image should have a corresponding `.xml` file with the same filename.  
